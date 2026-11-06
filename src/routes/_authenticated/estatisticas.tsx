@@ -173,7 +173,8 @@ function Estatisticas() {
       ) : (
         <div className="print-area overflow-auto space-y-8">
           {atribuicoes.map((at) => {
-            const classe = at.subjects?.classe ?? "";
+            const classe = CLASSES.find((c) => c === at.subjects?.classe);
+            if (!classe) return null;
             const min = notaMinima(classe);
             const daClasse = alunos.filter((a) => a.classe === classe && (!at.turmas.length || at.turmas.includes(a.turma)));
             const activos = daClasse.filter((a) => a.estado === "Activo");
