@@ -1,5 +1,9 @@
 # Roadmap
 
+## Pedidos actuais (06/11)
+- [ ] Identificar e reverter as alterações feitas desde as 15:00, no projecto e no GitHub, preservando a versão publicada e os dados da escola
+- [ ] Definir fluxo em que apenas a branch actualmente publicada alimenta produção e alterações de outras branches exigem aprovação explícita
+
 - [ ] Simplificar dados dos alunos e adicionar edição e confirmação de eliminação
 - [ ] Editar disciplinas sem alterar registos de outras classes
 - [ ] Ajustar entrada externa, refresh de acesso e saída
