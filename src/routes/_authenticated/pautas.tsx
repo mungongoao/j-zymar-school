@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAlunos, useDisciplinas, useInstituicao, useMe, useNotasClasse } from "@/lib/dados";
+import { useAlunos, useDisciplinas, useInstituicao, useMe, useNotasClasse, useFaltasClasse } from "@/lib/dados";
 import {
   cicloDe, fmt, mediaGeral, isClasseExame, isQualitativa, mediaTrimestral, nomeClasse, notaMinima, resultadoFinal, resultadoTrimestreDetalhado, resumoDisciplina, temExameOral,
 } from "@/lib/avaliacao";
@@ -28,6 +28,7 @@ function Pautas() {
   const { data: disciplinas = [] } = useDisciplinas(classe);
   const { data: alunos = [] } = useAlunos(classe);
   const { data: notas = [] } = useNotasClasse(classe);
+  const { data: faltasT = [] } = useFaltasClasse(classe);
   const { data: atribuicoes = [] } = useQuery({
     queryKey: ["atribuicoes-pautas", me?.id],
     enabled: !!me?.isProfessor,
@@ -38,6 +39,9 @@ function Pautas() {
   useEffect(() => { if (me?.isProfessor && tipo !== "tri") setTipo("tri"); }, [me?.isProfessor, tipo]);
   const notasDe = (aid: number, sid: string) => notas.filter((n) => n.student_id === aid && n.subject_id === sid);
   const nt = (aid: number, sid: string, t: number) => notas.find((n) => n.student_id === aid && n.subject_id === sid && n.trimestre === t);
+  const totalFaltas = (aid: number, trimestre?: number) =>
+    notas.filter((n) => n.student_id === aid && (trimestre == null || n.trimestre === trimestre)).reduce((s, n) => s + (n.faltas ?? 0), 0)
+    + faltasT.filter((f) => f.student_id === aid && (trimestre == null || f.trimestre === trimestre)).reduce((s, f) => s + f.faltas, 0);
   const qual = isQualitativa(classe);
   const exame = isClasseExame(classe);
   const min = notaMinima(classe);
@@ -118,7 +122,7 @@ function Pautas() {
                           {!qual && exame && <td className={cls(r.exame)}>{fmt(r.exame)}</td>}
                           {!qual && <td className={cls(r.mfd)}><b>{fmt(r.mfd)}</b></td>}
                           {!qual && exame && <td className={cls(r.mf)}><b>{fmt(r.mf)}</b></td>}
-                          <td>{notasDe(a.id, disciplina.id).reduce((s, n) => s + (n.faltas ?? 0), 0)}</td><td>{exame ? (r.positiva == null ? "" : r.positiva ? "Apto" : "Não Apto") : (r.positiva == null ? "" : r.positiva ? "Positiva" : "Negativa")}</td>
+                          <td>{totalFaltas(a.id)}</td><td>{exame ? (r.positiva == null ? "" : r.positiva ? "Apto" : "Não Apto") : (r.positiva == null ? "" : r.positiva ? "Positiva" : "Negativa")}</td>
                         </tr>
                       );
                     })}
@@ -153,7 +157,7 @@ function Pautas() {
                               <td key={d.id + "c"} className={cls(v as number | null)}><b>{fmt(v as number | null)}</b></td>,
                             ])}
                           {!qual && (() => { const g = mediaGeral(medias.map((m) => ({ extra: m.d.extra, v: m.v as number | null }))); return <td className={cls(g)}><b>{fmt(g)}</b></td>; })()}
-                          <td>{medias.reduce((s, m) => s + (m.n?.faltas ?? 0), 0)}</td><td><b>{resultadoTrimestreDetalhado(classe, medias.map((m) => ({ extra: m.d.extra, disciplina: m.d.nome, v: m.v })), medias.reduce((s, m) => s + (m.n?.faltas ?? 0), 0)) ?? "—"}</b></td>
+                          <td>{totalFaltas(a.id, Number(tri))}</td><td><b>{resultadoTrimestreDetalhado(classe, medias.map((m) => ({ extra: m.d.extra, disciplina: m.d.nome, v: m.v })), medias.reduce((s, m) => s + (m.n?.faltas ?? 0), 0)) ?? "—"}</b></td>
                         </tr>
                       );
                     })}
@@ -193,7 +197,7 @@ function Pautas() {
                             ]),
                           ])}
                           {!qual && (() => { const g = mediaGeral(res.map((x) => ({ extra: x.extra, v: x.r.mf }))); return <td className={cls(g)}><b>{fmt(g)}</b></td>; })()}
-                          <td>{notas.filter((n) => n.student_id === a.id).reduce((s, n) => s + (n.faltas ?? 0), 0)}</td><td><b>{fim?.texto ?? "—"}</b></td>
+                          <td>{totalFaltas(a.id)}</td><td><b>{fim?.texto ?? "—"}</b></td>
                         </tr>
                       );
                     })}
