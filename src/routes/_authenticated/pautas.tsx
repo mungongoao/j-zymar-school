@@ -44,7 +44,7 @@ function Pautas() {
   const cls = (v: number | null) => (v == null ? "" : v < min ? "neg" : "pos");
   const disciplina = disciplinas.find((d) => d.id === disc);
 
-  const titulo = tipo === "mini" ? "Mini-Pauta" : tipo === "tri" ? `Pauta do ${tri}º Trimestre` : "Pauta Final";
+  const titulo = tipo === "mini" ? "Mini-Pauta" : tipo === "tri" ? `Pauta do ${["I", "II", "III"][Number(tri) - 1]}° Trimestre` : "Pauta Final";
   const sub = `${nomeClasse(classe)}${tipo === "mini" && disciplina ? ` · ${disciplina.nome}` : ""} · Ano lectivo ${inst?.ano_lectivo ?? ""}`;
   const nomeImpressao = tipo === "mini" && disciplina
     ? `Pauta - ${disciplina.nome} - ${nomeClasse(classe)}`
@@ -74,7 +74,7 @@ function Pautas() {
         {tipo === "tri" && (
           <Select value={tri} onValueChange={setTri}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-            <SelectContent>{["1", "2", "3"].map((t) => <SelectItem key={t} value={t}>{t}º Trimestre</SelectItem>)}</SelectContent>
+            <SelectContent>{["1", "2", "3"].map((t) => <SelectItem key={t} value={t}>{["I", "II", "III"][Number(t) - 1]}° Trimestre</SelectItem>)}</SelectContent>
           </Select>
         )}
         <Button variant="outline" onClick={imprimir}><Printer className="mr-2 h-4 w-4" />Imprimir / PDF</Button>
@@ -91,11 +91,11 @@ function Pautas() {
                   <thead>
                     <tr>
                       <th rowSpan={2}>Nº</th><th rowSpan={2}>Nome do Aluno</th><th rowSpan={2}>G</th>
-                      {[1, 2, 3].map((t) => <th key={t} colSpan={qual ? 1 : exame && t === 3 ? 2 : 3}>{t}º Trimestre</th>)}
+                      {[1, 2, 3].map((t) => <th key={t} colSpan={qual ? 1 : exame && t === 3 ? 2 : 3}>{["I", "II", "III"][t - 1]}° Trimestre</th>)}
                       {!qual && exame && <th rowSpan={2}>NE</th>}
                       {!qual && <th rowSpan={2}>MFD</th>}
                       {!qual && exame && <th rowSpan={2}>MF</th>}
-                      <th rowSpan={2}>Observação</th>
+                      <th rowSpan={2}>Total de faltas</th><th rowSpan={2}>Observação</th>
                     </tr>
                     <tr>
                       {[1, 2, 3].map((t) => qual ? <th key={t}>Aval.</th> : exame && t === 3 ? [<th key={`mact3-${t}`}>MACT3</th>, <th key={`mt3-${t}`}>MT3</th>] : [<th key={`a${t}`}>MAC</th>, <th key={`b${t}`}>NPT</th>, <th key={`c${t}`}>MT{t}</th>])}
@@ -118,7 +118,7 @@ function Pautas() {
                           {!qual && exame && <td className={cls(r.exame)}>{fmt(r.exame)}</td>}
                           {!qual && <td className={cls(r.mfd)}><b>{fmt(r.mfd)}</b></td>}
                           {!qual && exame && <td className={cls(r.mf)}><b>{fmt(r.mf)}</b></td>}
-                          <td>{exame ? (r.positiva == null ? "" : r.positiva ? "Apto" : "Não Apto") : (r.positiva == null ? "" : r.positiva ? "Positiva" : "Negativa")}</td>
+                          <td>{notasDe(a.id, disciplina.id).reduce((s, n) => s + (n.faltas ?? 0), 0)}</td><td>{exame ? (r.positiva == null ? "" : r.positiva ? "Apto" : "Não Apto") : (r.positiva == null ? "" : r.positiva ? "Positiva" : "Negativa")}</td>
                         </tr>
                       );
                     })}
@@ -133,7 +133,7 @@ function Pautas() {
                       <th rowSpan={2}>Nº</th><th rowSpan={2}>Nome do Aluno</th><th rowSpan={2}>G</th>
                       {disciplinas.map((d) => <th key={d.id} colSpan={qual ? 1 : exame && Number(tri) === 3 ? 2 : 3}>{d.nome}{d.extra ? "*" : ""}</th>)}
                       {!qual && <th rowSpan={2}>MFD</th>}
-                      <th rowSpan={2}>Resultado</th>
+                      <th rowSpan={2}>Total de faltas</th><th rowSpan={2}>Resultado</th>
                     </tr>
                     <tr>{disciplinas.map((d) => qual ? <th key={d.id}>Aval.</th> : exame && Number(tri) === 3 ? [<th key={d.id + "mact3"}>MACT3</th>, <th key={d.id + "mt3"}>MT3</th>] : [<th key={d.id + "a"}>MAC</th>, <th key={d.id + "b"}>NPT</th>, <th key={d.id + "c"}>MT</th>])}</tr>
                   </thead>
@@ -153,7 +153,7 @@ function Pautas() {
                               <td key={d.id + "c"} className={cls(v as number | null)}><b>{fmt(v as number | null)}</b></td>,
                             ])}
                           {!qual && (() => { const g = mediaGeral(medias.map((m) => ({ extra: m.d.extra, v: m.v as number | null }))); return <td className={cls(g)}><b>{fmt(g)}</b></td>; })()}
-                          <td><b>{resultadoTrimestreDetalhado(classe, medias.map((m) => ({ extra: m.d.extra, disciplina: m.d.nome, v: m.v })), medias.reduce((s, m) => s + (m.n?.faltas ?? 0), 0)) ?? "—"}</b></td>
+                          <td>{medias.reduce((s, m) => s + (m.n?.faltas ?? 0), 0)}</td><td><b>{resultadoTrimestreDetalhado(classe, medias.map((m) => ({ extra: m.d.extra, disciplina: m.d.nome, v: m.v })), medias.reduce((s, m) => s + (m.n?.faltas ?? 0), 0)) ?? "—"}</b></td>
                         </tr>
                       );
                     })}
@@ -168,7 +168,7 @@ function Pautas() {
                       <th rowSpan={2}>Nº</th><th rowSpan={2}>Nome do Aluno</th><th rowSpan={2}>G</th>
                       {disciplinas.map((d) => <th key={d.id} colSpan={qual ? 1 : 3}>{d.nome}{d.extra ? "*" : ""}</th>)}
                       {!qual && <th rowSpan={2}>MF</th>}
-                      <th rowSpan={2}>Resultado Final</th>
+                      <th rowSpan={2}>Total de faltas</th><th rowSpan={2}>Resultado Final</th>
                     </tr>
                     <tr>
                       {disciplinas.map((d) => qual ? <th key={d.id}>Aval.</th> : [
@@ -193,7 +193,7 @@ function Pautas() {
                             ]),
                           ])}
                           {!qual && (() => { const g = mediaGeral(res.map((x) => ({ extra: x.extra, v: x.r.mf }))); return <td className={cls(g)}><b>{fmt(g)}</b></td>; })()}
-                          <td><b>{fim?.texto ?? "—"}</b></td>
+                          <td>{notas.filter((n) => n.student_id === a.id).reduce((s, n) => s + (n.faltas ?? 0), 0)}</td><td><b>{fim?.texto ?? "—"}</b></td>
                         </tr>
                       );
                     })}
