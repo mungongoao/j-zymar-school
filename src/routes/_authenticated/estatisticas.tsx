@@ -103,7 +103,7 @@ function Estatisticas() {
   const professoresUnicos = (ls: typeof linhas): Contagem => {
     const classes = new Set(ls.map((l) => l.classe));
     const genero = new Map(profs.map((p) => [p.user_id, p.genero]));
-    const ids = new Set(profs.filter((p) => disciplinas.some((d) => d.id === p.subject_id && classes.has(d.classe))).map((p) => p.user_id));
+    const ids = new Set(profs.filter((p) => disciplinas.some((d) => d.id === p.subject_id && Array.from(classes).some((classe) => classe === d.classe))).map((p) => p.user_id));
     return { mf: ids.size, f: Array.from(ids).filter((id) => genero.get(id) === "F").length };
   };
 
@@ -173,7 +173,8 @@ function Estatisticas() {
       ) : (
         <div className="print-area overflow-auto space-y-8">
           {atribuicoes.map((at) => {
-            const classe = at.subjects?.classe ?? "";
+            const classe = CLASSES.find((c) => c === at.subjects?.classe);
+            if (!classe) return null;
             const min = notaMinima(classe);
             const daClasse = alunos.filter((a) => a.classe === classe && (!at.turmas.length || at.turmas.includes(a.turma)));
             const activos = daClasse.filter((a) => a.estado === "Activo");
