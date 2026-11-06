@@ -97,8 +97,8 @@ function Pautas() {
                       <th rowSpan={2}>Nº</th><th rowSpan={2}>Nome do Aluno</th><th rowSpan={2}>G</th>
                       {[1, 2, 3].map((t) => <th key={t} colSpan={qual ? 1 : exame && t === 3 ? 2 : 3}>{["I", "II", "III"][t - 1]}° Trimestre</th>)}
                       {!qual && exame && <th rowSpan={2}>NE</th>}
-                      {!qual && <th rowSpan={2}>MFD</th>}
-                      {!qual && exame && <th rowSpan={2}>MF</th>}
+                      {!qual && <th rowSpan={2}>Média Trimestral (MFD)</th>}
+                      {!qual && exame && <th rowSpan={2}>Média Final (MF)</th>}
                       <th rowSpan={2}>Total de faltas</th><th rowSpan={2}>Observação</th>
                     </tr>
                     <tr>
@@ -157,7 +157,7 @@ function Pautas() {
                               <td key={d.id + "c"} className={cls(v as number | null)}><b>{fmt(v as number | null)}</b></td>,
                             ])}
                           {!qual && (() => { const g = mediaGeral(medias.map((m) => ({ extra: m.d.extra, v: m.v as number | null }))); return <td className={cls(g)}><b>{fmt(g)}</b></td>; })()}
-                          <td>{totalFaltas(a.id, Number(tri))}</td><td><b>{resultadoTrimestreDetalhado(classe, medias.map((m) => ({ extra: m.d.extra, disciplina: m.d.nome, v: m.v })), medias.reduce((s, m) => s + (m.n?.faltas ?? 0), 0)) ?? "—"}</b></td>
+                          <td>{totalFaltas(a.id, Number(tri))}</td><td><b>{resultadoTrimestreDetalhado(classe, medias.map((m) => ({ extra: m.d.extra, disciplina: m.d.nome, v: m.v })), totalFaltas(a.id, Number(tri))) ?? "—"}</b></td>
                         </tr>
                       );
                     })}
