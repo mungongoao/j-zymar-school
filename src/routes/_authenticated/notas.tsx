@@ -103,7 +103,7 @@ function Notas() {
         </Select>
         <Select value={tri} onValueChange={setTri}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>{["1", "2", "3"].map((t) => <SelectItem key={t} value={t}>{["I", "II", "III"][Number(t) - 1]}° Trimestre</SelectItem>)}</SelectContent>
+          <SelectContent>{["1", "2", "3"].map((t) => <SelectItem key={t} value={t}>{t}º Trimestre</SelectItem>)}</SelectContent>
         </Select>
         <Button onClick={guardar} disabled={!disciplina}>Salvar notas na pauta trimestral</Button>
       </PageTitle>

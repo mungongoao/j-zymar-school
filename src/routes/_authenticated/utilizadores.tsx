@@ -168,42 +168,12 @@ function Atribuicoes({ user, onClose }: { user: { id: string; nome: string }; on
     setBusy(false); if (result.error) toast.error(result.error.message);
     else await qc.invalidateQueries();
   }
-
-  async function associarTresClasses() {
-    if (ciclo !== "primeiro" || classe !== "todas") return;
-    const nomes = Array.from(new Set(disc.filter(d => classes.includes(d.classe)).map(d => d.nome)));
-    const grupos = nomes.map(nome => classes.map(c => disc.find(d => d.classe === c && d.nome.trim().toLocaleLowerCase() === nome.trim().toLocaleLowerCase())))
-      .filter(grupo => grupo.every(Boolean)) as NonNullable<(typeof disc)[number]>[][];
-    if (!grupos.length) return void toast.error("Não encontrei disciplinas com o mesmo nome nas três classes.");
-    if (!confirm("Associar este professor às mesmas disciplinas na 7ª, 8ª e 9ª classes, em todas as turmas? As atribuições existentes deste professor serão actualizadas; os outros professores e os dados dos alunos não serão alterados.")) return;
-    setBusy(true);
-    try {
-      for (const grupo of grupos) {
-        for (const d of grupo) {
-          const actual = atrib.find(a => a.subject_id === d.id);
-          const turmas = Array.from(new Set(alunos.filter(a => a.classe === d.classe).map(a => a.turma)));
-          const result = actual
-            ? await supabase.from("teacher_assignments").update({ turmas }).eq("id", actual.id)
-            : await supabase.from("teacher_assignments").insert({ user_id: user.id, subject_id: d.id, turmas });
-          if (result.error) throw result.error;
-        }
-      }
-      toast.success("Professor associado transversalmente às 7ª, 8ª e 9ª classes.");
-      await qc.invalidateQueries();
-    } catch (e) {
-      toast.error("Não foi possível concluir todas as associações: " + (e as Error).message);
-      await qc.invalidateQueries();
-    } finally {
-      setBusy(false);
-    }
-  }
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[80vh] overflow-auto">
         <DialogHeader><DialogTitle>Disciplinas de {user.nome}</DialogTitle></DialogHeader>
         <Select value={ciclo} onValueChange={v => {setCiclo(v);setClasse("");}}><SelectTrigger aria-label="Ciclo"><SelectValue placeholder="Ciclo" /></SelectTrigger><SelectContent><SelectItem value="primario">Ensino Primário</SelectItem><SelectItem value="primeiro">Primeiro Ciclo</SelectItem></SelectContent></Select>
         {ciclo && <Select value={classe} onValueChange={setClasse}><SelectTrigger aria-label="Classe"><SelectValue placeholder="Classe" /></SelectTrigger><SelectContent>{ciclo === "primeiro" && <SelectItem value="todas">7ª, 8ª e 9ª Classes</SelectItem>}{classes.map(c => <SelectItem key={c} value={c}>{nomeClasse(c)}</SelectItem>)}</SelectContent></Select>}
-        {ciclo === "primeiro" && classe === "todas" && <Button size="sm" disabled={busy} onClick={associarTresClasses}>Associar professor às 3 classes</Button>}
         <div className="space-y-3">{classes.filter(c => listadas.some(d => d.classe === c)).map(c => <section key={c}><h3 className="mb-2 font-semibold">{nomeClasse(c)}</h3>{listadas.filter(d => d.classe === c).flatMap(d => {
           const actual = atrib.find(a => a.subject_id === d.id);
           const turmas = Array.from(new Set([...alunos.filter(a => a.classe === c).map(a => a.turma), ...(actual?.turmas ?? [])])).sort();
