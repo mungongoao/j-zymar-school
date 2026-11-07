@@ -53,9 +53,9 @@ function Boletins() {
         <Select value={tipo} onValueChange={setTipo}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">I° Trimestre</SelectItem>
-            <SelectItem value="2">II° Trimestre</SelectItem>
-            <SelectItem value="3">III° Trimestre</SelectItem>
+            <SelectItem value="1">Iº Trimestre</SelectItem>
+            <SelectItem value="2">IIº Trimestre</SelectItem>
+            <SelectItem value="3">IIIº Trimestre</SelectItem>
             <SelectItem value="final">Boletim Final</SelectItem>
           </SelectContent>
         </Select>
@@ -105,7 +105,7 @@ function Boletim({ aluno, n, classe, tipo, inst, disciplinas, notas, faltasT }: 
   const min = notaMinima(classe);
   const cls = (v: number | null) => (v == null ? "" : v < min ? "neg" : "pos");
   const nd = (sid: string) => notas.filter((x) => x.student_id === aluno.id && x.subject_id === sid);
-  const titulo = tipo === "final" ? "Boletim Final" : `Boletim de Notas — ${["I", "II", "III"][Number(tipo) - 1]}° Trimestre`;
+  const titulo = tipo === "final" ? "Boletim Final" : `Boletim de Notas — ${["I", "II", "III"][Number(tipo) - 1]}º Trimestre`;
 
   let resultado: string | null = null;
   const linhas = disciplinas.map((d) => {
@@ -167,7 +167,7 @@ function Boletim({ aluno, n, classe, tipo, inst, disciplinas, notas, faltasT }: 
       </table>
       <div style={{ fontSize: 11, marginTop: 6 }}>
         <div><b>Total de faltas:</b> {faltas}</div>
-        {mediaFinal != null && <div><b>{tipo === "final" ? "Média Final:" : "Média Trimestral:"}</b> <b className={cls(mediaFinal)}>{fmt(mediaFinal)}</b></div>}
+        {mediaFinal != null && <div><b>Média Final:</b> <b className={cls(mediaFinal)}>{fmt(mediaFinal)}</b></div>}
         <div><b>Resultado:</b> <b className={resultado ? (resultado.startsWith("Não") ? "neg" : "pos") : ""}>{resultado ?? "—"}</b></div>
         {disciplinas.some((d) => d.extra) && <div style={{ fontSize: 9 }}>* Extra-curricular (não conta para o resultado).</div>}
       </div>

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAlunos, useDisciplinas, useInstituicao, useMe, useNotasClasse, useFaltasClasse } from "@/lib/dados";
+import { useAlunos, useDisciplinas, useInstituicao, useMe, useNotasClasse } from "@/lib/dados";
 import {
   cicloDe, fmt, mediaGeral, isClasseExame, isQualitativa, mediaTrimestral, nomeClasse, notaMinima, resultadoFinal, resultadoTrimestreDetalhado, resumoDisciplina, temExameOral,
 } from "@/lib/avaliacao";
@@ -28,7 +28,6 @@ function Pautas() {
   const { data: disciplinas = [] } = useDisciplinas(classe);
   const { data: alunos = [] } = useAlunos(classe);
   const { data: notas = [] } = useNotasClasse(classe);
-  const { data: faltasT = [] } = useFaltasClasse(classe);
   const { data: atribuicoes = [] } = useQuery({
     queryKey: ["atribuicoes-pautas", me?.id],
     enabled: !!me?.isProfessor,
@@ -39,16 +38,13 @@ function Pautas() {
   useEffect(() => { if (me?.isProfessor && tipo !== "tri") setTipo("tri"); }, [me?.isProfessor, tipo]);
   const notasDe = (aid: number, sid: string) => notas.filter((n) => n.student_id === aid && n.subject_id === sid);
   const nt = (aid: number, sid: string, t: number) => notas.find((n) => n.student_id === aid && n.subject_id === sid && n.trimestre === t);
-  const totalFaltas = (aid: number, trimestre?: number) =>
-    notas.filter((n) => n.student_id === aid && (trimestre == null || n.trimestre === trimestre)).reduce((s, n) => s + (n.faltas ?? 0), 0)
-    + faltasT.filter((f) => f.student_id === aid && (trimestre == null || f.trimestre === trimestre)).reduce((s, f) => s + f.faltas, 0);
   const qual = isQualitativa(classe);
   const exame = isClasseExame(classe);
   const min = notaMinima(classe);
   const cls = (v: number | null) => (v == null ? "" : v < min ? "neg" : "pos");
   const disciplina = disciplinas.find((d) => d.id === disc);
 
-  const titulo = tipo === "mini" ? "Mini-Pauta" : tipo === "tri" ? `Pauta do ${["I", "II", "III"][Number(tri) - 1]}° Trimestre` : "Pauta Final";
+  const titulo = tipo === "mini" ? "Mini-Pauta" : tipo === "tri" ? `Pauta do ${tri}º Trimestre` : "Pauta Final";
   const sub = `${nomeClasse(classe)}${tipo === "mini" && disciplina ? ` · ${disciplina.nome}` : ""} · Ano lectivo ${inst?.ano_lectivo ?? ""}`;
   const nomeImpressao = tipo === "mini" && disciplina
     ? `Pauta - ${disciplina.nome} - ${nomeClasse(classe)}`
@@ -78,7 +74,7 @@ function Pautas() {
         {tipo === "tri" && (
           <Select value={tri} onValueChange={setTri}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-            <SelectContent>{["1", "2", "3"].map((t) => <SelectItem key={t} value={t}>{["I", "II", "III"][Number(t) - 1]}° Trimestre</SelectItem>)}</SelectContent>
+            <SelectContent>{["1", "2", "3"].map((t) => <SelectItem key={t} value={t}>{t}º Trimestre</SelectItem>)}</SelectContent>
           </Select>
         )}
         <Button variant="outline" onClick={imprimir}><Printer className="mr-2 h-4 w-4" />Imprimir / PDF</Button>
@@ -95,11 +91,11 @@ function Pautas() {
                   <thead>
                     <tr>
                       <th rowSpan={2}>Nº</th><th rowSpan={2}>Nome do Aluno</th><th rowSpan={2}>G</th>
-                      {[1, 2, 3].map((t) => <th key={t} colSpan={qual ? 1 : exame && t === 3 ? 2 : 3}>{["I", "II", "III"][t - 1]}° Trimestre</th>)}
+                      {[1, 2, 3].map((t) => <th key={t} colSpan={qual ? 1 : exame && t === 3 ? 2 : 3}>{t}º Trimestre</th>)}
                       {!qual && exame && <th rowSpan={2}>NE</th>}
-                      {!qual && <th rowSpan={2}>Média Trimestral (MFD)</th>}
-                      {!qual && exame && <th rowSpan={2}>Média Final (MF)</th>}
-                      <th rowSpan={2}>Total de faltas</th><th rowSpan={2}>Observação</th>
+                      {!qual && <th rowSpan={2}>MFD</th>}
+                      {!qual && exame && <th rowSpan={2}>MF</th>}
+                      <th rowSpan={2}>Observação</th>
                     </tr>
                     <tr>
                       {[1, 2, 3].map((t) => qual ? <th key={t}>Aval.</th> : exame && t === 3 ? [<th key={`mact3-${t}`}>MACT3</th>, <th key={`mt3-${t}`}>MT3</th>] : [<th key={`a${t}`}>MAC</th>, <th key={`b${t}`}>NPT</th>, <th key={`c${t}`}>MT{t}</th>])}
@@ -122,7 +118,7 @@ function Pautas() {
                           {!qual && exame && <td className={cls(r.exame)}>{fmt(r.exame)}</td>}
                           {!qual && <td className={cls(r.mfd)}><b>{fmt(r.mfd)}</b></td>}
                           {!qual && exame && <td className={cls(r.mf)}><b>{fmt(r.mf)}</b></td>}
-                          <td>{totalFaltas(a.id)}</td><td>{exame ? (r.positiva == null ? "" : r.positiva ? "Apto" : "Não Apto") : (r.positiva == null ? "" : r.positiva ? "Positiva" : "Negativa")}</td>
+                          <td>{exame ? (r.positiva == null ? "" : r.positiva ? "Apto" : "Não Apto") : (r.positiva == null ? "" : r.positiva ? "Positiva" : "Negativa")}</td>
                         </tr>
                       );
                     })}
@@ -137,7 +133,7 @@ function Pautas() {
                       <th rowSpan={2}>Nº</th><th rowSpan={2}>Nome do Aluno</th><th rowSpan={2}>G</th>
                       {disciplinas.map((d) => <th key={d.id} colSpan={qual ? 1 : exame && Number(tri) === 3 ? 2 : 3}>{d.nome}{d.extra ? "*" : ""}</th>)}
                       {!qual && <th rowSpan={2}>MFD</th>}
-                      <th rowSpan={2}>Total de faltas</th><th rowSpan={2}>Resultado</th>
+                      <th rowSpan={2}>Resultado</th>
                     </tr>
                     <tr>{disciplinas.map((d) => qual ? <th key={d.id}>Aval.</th> : exame && Number(tri) === 3 ? [<th key={d.id + "mact3"}>MACT3</th>, <th key={d.id + "mt3"}>MT3</th>] : [<th key={d.id + "a"}>MAC</th>, <th key={d.id + "b"}>NPT</th>, <th key={d.id + "c"}>MT</th>])}</tr>
                   </thead>
@@ -157,7 +153,7 @@ function Pautas() {
                               <td key={d.id + "c"} className={cls(v as number | null)}><b>{fmt(v as number | null)}</b></td>,
                             ])}
                           {!qual && (() => { const g = mediaGeral(medias.map((m) => ({ extra: m.d.extra, v: m.v as number | null }))); return <td className={cls(g)}><b>{fmt(g)}</b></td>; })()}
-                          <td>{totalFaltas(a.id, Number(tri))}</td><td><b>{resultadoTrimestreDetalhado(classe, medias.map((m) => ({ extra: m.d.extra, disciplina: m.d.nome, v: m.v })), totalFaltas(a.id, Number(tri))) ?? "—"}</b></td>
+                          <td><b>{resultadoTrimestreDetalhado(classe, medias.map((m) => ({ extra: m.d.extra, disciplina: m.d.nome, v: m.v })), medias.reduce((s, m) => s + (m.n?.faltas ?? 0), 0)) ?? "—"}</b></td>
                         </tr>
                       );
                     })}
@@ -172,7 +168,7 @@ function Pautas() {
                       <th rowSpan={2}>Nº</th><th rowSpan={2}>Nome do Aluno</th><th rowSpan={2}>G</th>
                       {disciplinas.map((d) => <th key={d.id} colSpan={qual ? 1 : 3}>{d.nome}{d.extra ? "*" : ""}</th>)}
                       {!qual && <th rowSpan={2}>MF</th>}
-                      <th rowSpan={2}>Total de faltas</th><th rowSpan={2}>Resultado Final</th>
+                      <th rowSpan={2}>Resultado Final</th>
                     </tr>
                     <tr>
                       {disciplinas.map((d) => qual ? <th key={d.id}>Aval.</th> : [
@@ -197,7 +193,7 @@ function Pautas() {
                             ]),
                           ])}
                           {!qual && (() => { const g = mediaGeral(res.map((x) => ({ extra: x.extra, v: x.r.mf }))); return <td className={cls(g)}><b>{fmt(g)}</b></td>; })()}
-                          <td>{totalFaltas(a.id)}</td><td><b>{fim?.texto ?? "—"}</b></td>
+                          <td><b>{fim?.texto ?? "—"}</b></td>
                         </tr>
                       );
                     })}

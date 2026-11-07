@@ -89,7 +89,7 @@ function Estatisticas() {
   }), [alunos, disciplinas, notas, profs, tri]);
 
   if (me?.isEncarregado || me?.isCoordenador) return <p>Sem permissão.</p>;
-  const tituloTri = tri === "final" ? "Final" : `${["I", "II", "III"][Number(tri) - 1]}° Trimestre`;
+  const tituloTri = tri === "final" ? "Final" : `${tri}º Trimestre`;
   const nomeImpressao = `Estatísticas - ${tituloTri}`;
   function imprimir() {
     const anterior = document.title;
@@ -100,13 +100,6 @@ function Estatisticas() {
   const soma = (ls: typeof linhas, k: "matriculados" | "desistentes" | "avaliados" | "comApr" | "semApr" | "professores") =>
     ({ mf: ls.reduce((s, l) => s + l[k].mf, 0), f: ls.reduce((s, l) => s + l[k].f, 0) });
   const cel = (c: Contagem, base?: number) => <><td>{c.mf}</td><td>{c.f}</td>{base !== undefined && <td>{percentagem(c.mf, base)}%</td>}</>;
-  const professoresUnicos = (ls: typeof linhas): Contagem => {
-    const classes = new Set(ls.map((l) => l.classe));
-    const genero = new Map(profs.map((p) => [p.user_id, p.genero]));
-    const ids = new Set(profs.filter((p) => disciplinas.some((d) => d.id === p.subject_id && Array.from(classes).some((classe) => classe === d.classe))).map((p) => p.user_id));
-    return { mf: ids.size, f: Array.from(ids).filter((id) => genero.get(id) === "F").length };
-  };
-
 
   return (
     <div>
@@ -119,7 +112,7 @@ function Estatisticas() {
         <Select value={tri} onValueChange={setTri}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {["1", "2", "3"].map((x) => <SelectItem key={x} value={x}>{["I", "II", "III"][Number(x) - 1]}° Trimestre</SelectItem>)}
+            {["1", "2", "3"].map((x) => <SelectItem key={x} value={x}>{x}º Trimestre</SelectItem>)}
             <SelectItem value="final">Final</SelectItem>
           </SelectContent>
         </Select>
@@ -148,14 +141,14 @@ function Estatisticas() {
                     <Fragment key={ciclo}>
                       {ls.map((l, i) => (
                         <tr key={l.classe}>
-                          {i === 0 && <td rowSpan={ls.length} className="text-center align-middle"><b>{ciclo}</b></td>}
+                          {i === 0 && <td rowSpan={ls.length} className="esq"><b>{ciclo}</b></td>}
                           <td>{nomeClasse(l.classe)}</td>
                           {cel(l.professores)}<td>{l.turmas}</td>{cel(l.matriculados)}{cel(l.desistentes, l.matriculados.mf + l.desistentes.mf)}{cel(l.avaliados, l.matriculados.mf + l.desistentes.mf)}{cel(l.comApr, l.avaliados.mf)}{cel(l.semApr, l.avaliados.mf)}
                         </tr>
                       ))}
                       <tr className="font-semibold">
                         <td colSpan={2}>Subtotal — {ciclo}</td>
-                        {cel(professoresUnicos(ls))}<td>{ls.reduce((s, l) => s + l.turmas, 0)}</td>
+                        {cel(soma(ls, "professores"))}<td>{ls.reduce((s, l) => s + l.turmas, 0)}</td>
                         {cel(soma(ls, "matriculados"))}{cel(soma(ls, "desistentes"), soma(ls, "matriculados").mf + soma(ls, "desistentes").mf)}{cel(soma(ls, "avaliados"), soma(ls, "matriculados").mf + soma(ls, "desistentes").mf)}{cel(soma(ls, "comApr"), soma(ls, "avaliados").mf)}{cel(soma(ls, "semApr"), soma(ls, "avaliados").mf)}
                       </tr>
                     </Fragment>
@@ -163,7 +156,7 @@ function Estatisticas() {
                 })}
                 <tr className="font-bold">
                   <td colSpan={2}>Total Geral</td>
-                  {cel(professoresUnicos(linhas))}<td>{linhas.reduce((s, l) => s + l.turmas, 0)}</td>
+                  {cel(soma(linhas, "professores"))}<td>{linhas.reduce((s, l) => s + l.turmas, 0)}</td>
                   {cel(soma(linhas, "matriculados"))}{cel(soma(linhas, "desistentes"), soma(linhas, "matriculados").mf + soma(linhas, "desistentes").mf)}{cel(soma(linhas, "avaliados"), soma(linhas, "matriculados").mf + soma(linhas, "desistentes").mf)}{cel(soma(linhas, "comApr"), soma(linhas, "avaliados").mf)}{cel(soma(linhas, "semApr"), soma(linhas, "avaliados").mf)}
                 </tr>
               </tbody>
@@ -173,8 +166,7 @@ function Estatisticas() {
       ) : (
         <div className="print-area overflow-auto space-y-8">
           {atribuicoes.map((at) => {
-            const classe = CLASSES.find((c) => c === at.subjects?.classe);
-            if (!classe) return null;
+            const classe = at.subjects?.classe ?? "";
             const min = notaMinima(classe);
             const daClasse = alunos.filter((a) => a.classe === classe && (!at.turmas.length || at.turmas.includes(a.turma)));
             const activos = daClasse.filter((a) => a.estado === "Activo");
