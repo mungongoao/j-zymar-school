@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Pedidos actuais (06/11)
-- [ ] Reverter alterações desde as 15:00 no projecto e no GitHub — aguarda confirmação da revisão exacta publicada e acesso às definições Git; a última referência disponível é de 07:31, não prova qual versão está publicada
+- [ ] Remover a versão editada após as 15:00 de 06/11 do projecto — identificar e validar o último estado anterior ao corte antes de restaurar; não alterar dados escolares
 - [ ] Fixar fluxo de produção na branch actualmente publicada e exigir aprovação para outras branches — aguarda alteração manual em Project Settings → Git e nas protecções do GitHub; estas definições não estão acessíveis neste chat
 
 - [ ] Simplificar dados dos alunos e adicionar edição e confirmação de eliminação
