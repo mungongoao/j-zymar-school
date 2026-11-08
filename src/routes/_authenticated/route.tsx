@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe, useInstituicao, NOMES_PAPEL } from "@/lib/dados";
@@ -24,6 +24,8 @@ function Layout() {
   const { data: inst } = useInstituicao();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const mostrarDireitos = !["/boletins", "/pautas", "/lista-nominal"].includes(pathname);
 
   async function sair() {
     await qc.cancelQueries();
@@ -126,9 +128,11 @@ function Layout() {
           <span className="shrink-0 rounded-full bg-background px-3 py-1 text-xs font-semibold text-primary sm:text-sm">Ano lectivo {inst?.ano_lectivo}</span>
         </header>
         <div className="flex-1 p-3 sm:p-6"><Outlet /></div>
-        <footer className="border-t px-3 py-4 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground print:hidden">
-          © 2026 - SEBASTIÃO MUNGONGO "TODOS OS DIREITOS, RESERVADOS"
-        </footer>
+        {mostrarDireitos && (
+          <footer className="border-t px-3 py-4 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground print:hidden">
+            © 2026 - SEBASTIÃO MUNGONGO "TODOS OS DIREITOS, RESERVADOS"
+          </footer>
+        )}
       </main>
     </div>
   );
