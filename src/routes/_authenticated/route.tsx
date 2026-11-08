@@ -120,12 +120,15 @@ function Layout() {
           {sairBotao("mt-3 w-full", true)}
         </div>
       </aside>
-      <main className="min-w-0 flex-1 overflow-x-auto">
+      <main className="flex min-w-0 flex-1 flex-col overflow-x-auto">
         <header className="z-20 flex flex-wrap md:sticky items-center justify-between gap-2 border-b bg-[var(--tema-principal)] px-3 py-3 text-white shadow sm:px-6 print:hidden md:top-0">
           <div className="min-w-0 text-base font-bold leading-tight sm:text-lg md:text-xl">{inst?.nome_escola}</div>
           <span className="shrink-0 rounded-full bg-background px-3 py-1 text-xs font-semibold text-primary sm:text-sm">Ano lectivo {inst?.ano_lectivo}</span>
         </header>
-        <div className="p-3 sm:p-6"><Outlet /></div>
+        <div className="flex-1 p-3 sm:p-6"><Outlet /></div>
+        <footer className="border-t px-3 py-4 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground print:hidden">
+          © 2026 - SEBASTIÃO MUNGONGO "TODOS OS DIREITOS, RESERVADOS"
+        </footer>
       </main>
     </div>
   );
