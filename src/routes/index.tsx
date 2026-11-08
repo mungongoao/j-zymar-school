@@ -37,7 +37,10 @@ function Inicio() {
           <Link to="/auth">Entrar no sistema</Link>
         </Button>
       </main>
-      <footer className="py-4 text-center text-xs opacity-70">{inst?.direccao_municipal}</footer>
+      <footer className="space-y-1 py-4 text-center text-xs opacity-70">
+        <div>{inst?.direccao_municipal}</div>
+        <div className="font-medium uppercase tracking-wide">© 2026 - SEBASTIÃO MUNGONGO "TODOS OS DIREITOS, RESERVADOS"</div>
+      </footer>
     </div>
   );
 }
