@@ -111,12 +111,21 @@ export function TeacherUsageTimer() {
 
   if (!me?.isProfessor || me.isStaff || me.isCoordenador) return null;
   const fmt = (n: number) => `${Math.floor(n / 60).toString().padStart(2, "0")}:${(n % 60).toString().padStart(2, "0")}`;
+  const shortMessage = message
+    ? message.toLowerCase().includes("usage_date") || message.toLowerCase().includes("column reference")
+      ? "erro técnico"
+      : message.toLowerCase().includes("sessão")
+        ? "sessão expirada"
+        : message.toLowerCase().includes("autoriz") || message.toLowerCase().includes("acesso")
+          ? "sem autorização"
+          : "atenção"
+    : "";
   return (
-    <div className="flex items-center gap-2 rounded-md bg-background/15 px-3 py-1.5 text-xs font-semibold text-white" aria-live="polite">
-      <Clock className="h-4 w-4" />
-      <span>Tempo: {fmt(remaining)}</span>
-      <span className="opacity-75">{usage?.session_active ? "em utilização" : "pausado"}</span>
-      {message && <span className="max-w-56 truncate text-amber-200" title={message}>{message}</span>}
+    <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-background/15 px-2.5 py-1.5 text-xs font-semibold leading-tight text-white" aria-live="polite">
+      <Clock className="h-4 w-4 shrink-0" />
+      <span className="shrink-0">Tempo: {fmt(remaining)}</span>
+      <span className="shrink-0 opacity-75">{usage?.session_active ? "a contar" : "pausado"}</span>
+      {shortMessage && <span className="max-w-24 truncate text-amber-200" title={message}>{shortMessage}</span>}
     </div>
   );
 }
