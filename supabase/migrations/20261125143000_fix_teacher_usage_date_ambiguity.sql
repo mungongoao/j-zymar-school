@@ -83,8 +83,8 @@ BEGIN
   END IF;
 
   SELECT * INTO x
-  FROM public.teacher_daily_usage
-  WHERE user_id = u AND usage_date = d
+  FROM public.teacher_daily_usage AS usage_row
+  WHERE usage_row.user_id = u AND usage_row.usage_date = d
   FOR UPDATE;
 
   IF NOT FOUND OR NOT x.session_active THEN
